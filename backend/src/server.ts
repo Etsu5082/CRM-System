@@ -10,6 +10,7 @@ import taskRoutes from './routes/tasks';
 import approvalRoutes from './routes/approvals';
 import reportRoutes from './routes/reports';
 import auditRoutes from './routes/audit';
+import notificationRoutes from './routes/notifications';
 
 // Load environment variables
 dotenv.config();
@@ -44,6 +45,7 @@ app.get('/api', (req: Request, res: Response) => {
       approvals: '/api/approvals',
       reports: '/api/reports',
       audit: '/api/audit',
+      notifications: '/api/notifications',
     },
   });
 });
@@ -68,6 +70,9 @@ app.use('/api/reports', reportRoutes);
 
 // Audit routes
 app.use('/api/audit', auditRoutes);
+
+// Notification routes
+app.use('/api/notifications', notificationRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

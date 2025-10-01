@@ -18,6 +18,7 @@ export function DashboardLayout({ children }: LayoutProps) {
   const [overdueTasks, setOverdueTasks] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const fetchOverdueTasks = async () => {
@@ -33,10 +34,23 @@ export function DashboardLayout({ children }: LayoutProps) {
       }
     };
 
+    const fetchUnreadNotifications = async () => {
+      try {
+        const response = await apiClient.get('/api/notifications/unread-count');
+        setUnreadCount(response.data.data.count);
+      } catch (error) {
+        console.error('Failed to fetch unread notifications:', error);
+      }
+    };
+
     if (user) {
       fetchOverdueTasks();
+      fetchUnreadNotifications();
       // 5分ごとに更新
-      const interval = setInterval(fetchOverdueTasks, 5 * 60 * 1000);
+      const interval = setInterval(() => {
+        fetchOverdueTasks();
+        fetchUnreadNotifications();
+      }, 5 * 60 * 1000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -90,6 +104,19 @@ export function DashboardLayout({ children }: LayoutProps) {
             </Link>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
+            {/* Notification Bell */}
+            <Link
+              href="/dashboard/notifications"
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+              aria-label="通知"
+            >
+              <span className="text-xl">🔔</span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center font-bold px-1">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </Link>
             {overdueTasks > 0 && (
               <Link
                 href="/dashboard/tasks?filter=overdue"

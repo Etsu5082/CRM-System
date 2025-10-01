@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../types';
 import prisma from '../utils/prisma';
 import { z } from 'zod';
+import { createNotification } from './notificationController';
 
 // Validation schemas
 const createApprovalSchema = z.object({
@@ -206,6 +207,24 @@ export async function createApproval(req: AuthRequest, res: Response): Promise<v
       },
     });
 
+    // Find managers to notify (assuming MANAGER role should get notifications)
+    const managers = await prisma.user.findMany({
+      where: {
+        role: { in: ['MANAGER', 'COMPLIANCE'] },
+      },
+    });
+
+    // Create notification for each manager
+    for (const manager of managers) {
+      await createNotification({
+        userId: manager.id,
+        type: 'APPROVAL_REQUEST',
+        title: '新しい承認リクエスト',
+        message: `${req.user!.name}が${customer.name}様への${validatedData.productName}の承認リクエストを作成しました`,
+        link: `/dashboard/approvals/${approval.id}`,
+      });
+    }
+
     res.status(201).json({ data: approval });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -291,6 +310,19 @@ export async function updateApproval(req: AuthRequest, res: Response): Promise<v
         resourceId: approval.id,
         changes: `${validatedData.status} approval request for ${existingApproval.customer.name} - ${existingApproval.productName}`,
       },
+    });
+
+    // Notify the requester about approval/rejection
+    const notificationType = validatedData.status === 'APPROVED' ? 'APPROVAL_APPROVED' : 'APPROVAL_REJECTED';
+    const notificationTitle = validatedData.status === 'APPROVED' ? '承認リクエストが承認されました' : '承認リクエストが却下されました';
+    const notificationMessage = `${existingApproval.customer.name}様への${existingApproval.productName}の承認リクエストが${validatedData.status === 'APPROVED' ? '承認' : '却下'}されました`;
+
+    await createNotification({
+      userId: existingApproval.requesterId,
+      type: notificationType,
+      title: notificationTitle,
+      message: notificationMessage,
+      link: `/dashboard/approvals/${approval.id}`,
     });
 
     res.json({ data: approval });
