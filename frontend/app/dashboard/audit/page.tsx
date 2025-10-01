@@ -12,10 +12,10 @@ interface AuditLog {
   id: string;
   userId: string;
   action: string;
-  entity: string;
-  entityId: string;
-  details: string;
-  createdAt: string;
+  resourceType: string;
+  resourceId: string | null;
+  changes: any;
+  timestamp: string;
   user: {
     id: string;
     name: string;
@@ -240,7 +240,7 @@ export default function AuditLogsPage() {
                         logs.map((log) => (
                           <tr key={log.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {new Date(log.createdAt).toLocaleString('ja-JP', {
+                              {new Date(log.timestamp).toLocaleString('ja-JP', {
                                 year: 'numeric',
                                 month: '2-digit',
                                 day: '2-digit',
@@ -260,11 +260,11 @@ export default function AuditLogsPage() {
                               {getActionBadge(log.action)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {getEntityLabel(log.entity)}
+                              {getEntityLabel(log.resourceType)}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-700 max-w-md">
-                              <div className="truncate" title={log.details}>
-                                {log.details}
+                              <div className="truncate" title={log.changes ? JSON.stringify(log.changes) : ''}>
+                                {log.changes ? JSON.stringify(log.changes) : '-'}
                               </div>
                             </td>
                           </tr>
