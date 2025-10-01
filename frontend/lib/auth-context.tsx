@@ -5,10 +5,18 @@ import { useRouter } from 'next/navigation';
 import apiClient from './axios';
 import { User, LoginCredentials, AuthResponse } from '@/types';
 
+interface RegisterCredentials {
+  email: string;
+  password: string;
+  name: string;
+  role?: 'ADMIN' | 'MANAGER' | 'SALES' | 'COMPLIANCE';
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
+  register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -61,6 +69,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const register = async (credentials: RegisterCredentials) => {
+    try {
+      const response = await apiClient.post<AuthResponse>('/api/auth/register', credentials);
+      const { user, token } = response.data.data;
+
+      // トークンとユーザー情報を保存
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+
+      // ダッシュボードにリダイレクト
+      router.push('/dashboard');
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Registration failed');
+    }
+  };
+
   const logout = async () => {
     try {
       await apiClient.post('/api/auth/logout');
@@ -81,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         loading,
         login,
+        register,
         logout,
         isAuthenticated: !!user,
       }}

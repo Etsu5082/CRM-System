@@ -11,34 +11,44 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/lib/auth-context';
 
-const loginSchema = z.object({
+const registerSchema = z.object({
+  name: z.string().min(2, '名前は2文字以上で入力してください').max(50, '名前は50文字以内で入力してください'),
   email: z.string().email('有効なメールアドレスを入力してください'),
-  password: z.string().min(1, 'パスワードを入力してください'),
+  password: z.string().min(8, 'パスワードは8文字以上で入力してください'),
+  confirmPassword: z.string().min(1, '確認用パスワードを入力してください'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'パスワードが一致しません',
+  path: ['confirmPassword'],
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { register: registerUser } = useAuth();
   const router = useRouter();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     try {
       setError('');
       setLoading(true);
-      await login(data);
+      await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        role: 'SALES', // デフォルトで営業担当として登録
+      });
     } catch (err: any) {
-      setError(err.message || 'ログインに失敗しました');
+      setError(err.message || 'アカウント作成に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -48,13 +58,28 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-center text-3xl">証券CRM</CardTitle>
+          <CardTitle className="text-center text-2xl md:text-3xl">アカウント作成</CardTitle>
           <CardDescription className="text-center">
-            メールアドレスとパスワードでログイン
+            証券CRMシステムに新規登録
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium">
+                名前
+              </label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="山田 太郎"
+                {...register('name')}
+              />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
+            </div>
+
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
                 メールアドレス
@@ -77,11 +102,26 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="8文字以上"
                 {...register('password')}
               />
               {errors.password && (
                 <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium">
+                パスワード（確認）
+              </label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="もう一度入力"
+                {...register('confirmPassword')}
+              />
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
               )}
             </div>
 
@@ -92,25 +132,21 @@ export default function LoginPage() {
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'ログイン中...' : 'ログイン'}
+              {loading ? 'アカウント作成中...' : 'アカウント作成'}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
             <p className="text-gray-600">
-              アカウントをお持ちでない方は{' '}
-              <Link href="/register" className="text-blue-600 hover:underline font-medium">
-                新規登録
+              既にアカウントをお持ちですか？{' '}
+              <Link href="/login" className="text-blue-600 hover:underline font-medium">
+                ログイン
               </Link>
             </p>
           </div>
 
-          <div className="mt-4 text-center text-xs text-gray-500 border-t pt-4">
-            <p className="font-semibold">テスト用アカウント</p>
-            <p className="mt-1">
-              Email: admin@example.com<br />
-              Password: Admin123!
-            </p>
+          <div className="mt-4 text-center text-xs text-gray-500">
+            <p>※ 登録すると営業担当(SALES)として登録されます</p>
           </div>
         </CardContent>
       </Card>
