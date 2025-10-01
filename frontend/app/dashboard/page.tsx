@@ -57,39 +57,39 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <h2 className="mb-6 text-3xl font-bold">ダッシュボード</h2>
+      <h2 className="mb-4 md:mb-6 text-2xl md:text-3xl font-bold">ダッシュボード</h2>
 
         {/* Stats Overview */}
         {!loading && stats && (
-          <div className="grid gap-4 md:grid-cols-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
             <Card>
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold">{stats.totalCustomers}</div>
-                <p className="text-xs text-gray-500">顧客数</p>
+              <CardContent className="pt-4 md:pt-6 pb-4 md:pb-6">
+                <div className="text-xl md:text-2xl font-bold">{stats.totalCustomers}</div>
+                <p className="text-xs text-gray-500 mt-1">顧客数</p>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold">{stats.totalMeetings}</div>
-                <p className="text-xs text-gray-500">商談数</p>
+              <CardContent className="pt-4 md:pt-6 pb-4 md:pb-6">
+                <div className="text-xl md:text-2xl font-bold">{stats.totalMeetings}</div>
+                <p className="text-xs text-gray-500 mt-1">商談数</p>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold">{stats.totalTasks}</div>
-                <p className="text-xs text-gray-500">タスク数</p>
+              <CardContent className="pt-4 md:pt-6 pb-4 md:pb-6">
+                <div className="text-xl md:text-2xl font-bold">{stats.totalTasks}</div>
+                <p className="text-xs text-gray-500 mt-1">タスク数</p>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-red-600">{stats.overdueTasks}</div>
-                <p className="text-xs text-gray-500">期限切れタスク</p>
+              <CardContent className="pt-4 md:pt-6 pb-4 md:pb-6">
+                <div className="text-xl md:text-2xl font-bold text-red-600">{stats.overdueTasks}</div>
+                <p className="text-xs text-gray-500 mt-1">期限切れタスク</p>
               </CardContent>
             </Card>
           </div>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>顧客管理</CardTitle>
