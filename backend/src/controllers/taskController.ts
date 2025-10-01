@@ -549,3 +549,73 @@ export async function deleteTask(req: AuthRequest, res: Response): Promise<void>
     });
   }
 }
+
+/**
+ * 期限間近のタスク取得（今日から3日以内）
+ */
+export async function getUpcomingTasks(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized', message: 'Authentication required' });
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const threeDaysFromNow = new Date(today);
+    threeDaysFromNow.setDate(today.getDate() + 3);
+    threeDaysFromNow.setHours(23, 59, 59, 999);
+
+    // クエリ条件
+    const where: any = {
+      dueDate: {
+        gte: today,
+        lte: threeDaysFromNow,
+      },
+      status: {
+        not: 'COMPLETED',
+      },
+    };
+
+    // SALES roleの場合は自分のタスクのみ
+    if (req.user.role === 'SALES') {
+      where.userId = req.user.id;
+    }
+
+    const tasks = await prisma.task.findMany({
+      where,
+      orderBy: {
+        dueDate: 'asc',
+      },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: tasks,
+    });
+  } catch (error) {
+    console.error('Get upcoming tasks error:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to get upcoming tasks',
+    });
+  }
+}

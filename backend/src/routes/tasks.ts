@@ -7,6 +7,7 @@ import {
   completeTask,
   deleteTask,
   getOverdueTasks,
+  getUpcomingTasks,
 } from '../controllers/taskController';
 import { authenticate, requireRole } from '../middleware/auth';
 
@@ -28,6 +29,13 @@ router.get('/', getTasks);
  * @access  Private
  */
 router.get('/overdue', getOverdueTasks);
+
+/**
+ * @route   GET /api/tasks/upcoming
+ * @desc    期限間近のタスク取得（3日以内）
+ * @access  Private
+ */
+router.get('/upcoming', getUpcomingTasks);
 
 /**
  * @route   GET /api/tasks/:id

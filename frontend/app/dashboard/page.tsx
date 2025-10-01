@@ -12,21 +12,34 @@ type DashboardStats = {
   totalMeetings: number;
   totalTasks: number;
   overdueTasks: number;
+  upcomingTasks: number;
+};
+
+type Task = {
+  id: string;
+  title: string;
+  dueDate: string;
+  status: string;
+  customer?: {
+    name: string;
+  };
 };
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [customersRes, meetingsRes, tasksRes, overdueRes] = await Promise.all([
+        const [customersRes, meetingsRes, tasksRes, overdueRes, upcomingRes] = await Promise.all([
           apiClient.get('/api/customers', { params: { limit: 1 } }),
           apiClient.get('/api/meetings', { params: { limit: 1 } }),
           apiClient.get('/api/tasks', { params: { limit: 1 } }),
           apiClient.get('/api/tasks/overdue'),
+          apiClient.get('/api/tasks/upcoming'),
         ]);
 
         setStats({
@@ -34,7 +47,9 @@ export default function DashboardPage() {
           totalMeetings: meetingsRes.data.pagination.total,
           totalTasks: tasksRes.data.pagination.total,
           overdueTasks: overdueRes.data.data.length,
+          upcomingTasks: upcomingRes.data.data.length,
         });
+        setUpcomingTasks(upcomingRes.data.data.slice(0, 5)); // 最大5件表示
       } catch (error) {
         console.error('Failed to fetch stats:', error);
       } finally {
@@ -87,6 +102,54 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* 期限間近のタスクアラート */}
+        {!loading && upcomingTasks.length > 0 && (
+          <Card className="mb-6 md:mb-8 border-yellow-200 bg-yellow-50">
+            <CardHeader>
+              <CardTitle className="flex items-center text-yellow-800">
+                <span className="mr-2">⚠️</span>
+                期限間近のタスク（3日以内）
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {upcomingTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between p-3 bg-white rounded-lg border border-yellow-200 hover:border-yellow-400 cursor-pointer transition-colors"
+                    onClick={() => { window.location.href = '/dashboard/tasks'; }}
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{task.title}</p>
+                      {task.customer && (
+                        <p className="text-sm text-gray-600">顧客: {task.customer.name}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-yellow-700">
+                        {new Date(task.dueDate).toLocaleDateString('ja-JP', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </p>
+                      <p className="text-xs text-gray-500">期限</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {stats && stats.upcomingTasks > 5 && (
+                <Button
+                  className="mt-4 w-full"
+                  variant="outline"
+                  onClick={() => { window.location.href = '/dashboard/tasks'; }}
+                >
+                  さらに{stats.upcomingTasks - 5}件のタスクを表示
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
