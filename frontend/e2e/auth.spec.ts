@@ -38,8 +38,10 @@ test.describe('Authentication Flow', () => {
     await page.getByLabel('パスワード').fill('WrongPassword123!');
     await page.getByRole('button', { name: 'ログイン' }).click();
 
+    // Should show error message
+    await expect(page.getByText(/Invalid email or password|ログインに失敗しました/)).toBeVisible({ timeout: 5000 });
+
     // Should stay on login page (not redirect to dashboard)
-    await page.waitForTimeout(2000);
     await expect(page).toHaveURL('/login');
   });
 

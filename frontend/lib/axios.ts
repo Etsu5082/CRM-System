@@ -36,14 +36,20 @@ apiClient.interceptors.response.use(
   },
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // 認証エラーの場合、トークンを削除してログインページへ
-      console.error('401 Unauthorized:', error.response?.data);
-      console.error('Request URL:', error.config?.url);
-      console.error('Token exists:', !!localStorage.getItem('token'));
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      // ログイン・登録APIの場合はリダイレクトしない
+      const isAuthEndpoint = error.config?.url?.includes('/api/auth/login') ||
+                            error.config?.url?.includes('/api/auth/register');
+
+      if (!isAuthEndpoint) {
+        // 認証エラーの場合、トークンを削除してログインページへ
+        console.error('401 Unauthorized:', error.response?.data);
+        console.error('Request URL:', error.config?.url);
+        console.error('Token exists:', !!localStorage.getItem('token'));
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
