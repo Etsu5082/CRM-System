@@ -108,6 +108,16 @@ export default function AuditLogsPage() {
     return labels[entity] || entity;
   };
 
+  // 認証の読み込み中は何も表示しない
+  if (authLoading) {
+    return (
+      <DashboardLayout>
+        <div className="py-8 text-center">読み込み中...</div>
+      </DashboardLayout>
+    );
+  }
+
+  // 認証後に権限チェック
   if (!user || !['ADMIN', 'COMPLIANCE'].includes(user.role)) {
     return (
       <DashboardLayout>
