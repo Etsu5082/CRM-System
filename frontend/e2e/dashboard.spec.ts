@@ -11,26 +11,26 @@ test.describe('Dashboard', () => {
   });
 
   test('should display dashboard with cards', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('ダッシュボード');
+    await expect(page.getByRole('heading', { name: 'ダッシュボード' })).toBeVisible();
 
     // Check for dashboard cards
-    await expect(page.getByText('顧客一覧')).toBeVisible();
-    await expect(page.getByText('商談履歴')).toBeVisible();
-    await expect(page.getByText('タスク管理')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '顧客管理' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '商談履歴' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'タスク管理' })).toBeVisible();
   });
 
   test('should navigate to customers page', async ({ page }) => {
-    await page.getByRole('link', { name: '顧客管理' }).first().click();
+    await page.getByRole('button', { name: '顧客一覧へ' }).click();
     await expect(page).toHaveURL('/dashboard/customers');
   });
 
   test('should navigate to tasks page', async ({ page }) => {
-    await page.getByRole('link', { name: 'タスク' }).first().click();
+    await page.getByRole('button', { name: 'タスク一覧へ' }).click();
     await expect(page).toHaveURL('/dashboard/tasks');
   });
 
   test('should navigate to meetings page', async ({ page }) => {
-    await page.getByRole('link', { name: '商談' }).first().click();
+    await page.getByRole('button', { name: '商談一覧へ' }).click();
     await expect(page).toHaveURL('/dashboard/meetings');
   });
 });
@@ -46,11 +46,11 @@ test.describe('Dashboard - Compliance Role', () => {
   });
 
   test('should display audit log card for compliance role', async ({ page }) => {
-    await expect(page.getByText('監査ログ')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '監査ログ' })).toBeVisible();
   });
 
   test('should navigate to audit log page', async ({ page }) => {
-    await page.getByText('ログ一覧へ').click();
+    await page.getByRole('button', { name: 'ログ一覧へ' }).click();
     await expect(page).toHaveURL('/dashboard/audit');
   });
 });
