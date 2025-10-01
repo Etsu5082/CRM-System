@@ -177,7 +177,11 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-500">操作履歴の閲覧</p>
-                <Button className="mt-4 w-full" variant="outline">
+                <Button
+                  className="mt-4 w-full"
+                  variant="outline"
+                  onClick={() => { window.location.href = '/dashboard/audit'; }}
+                >
                   ログ一覧へ
                 </Button>
               </CardContent>
