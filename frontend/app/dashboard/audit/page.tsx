@@ -25,7 +25,7 @@ interface AuditLog {
 }
 
 export default function AuditLogsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,13 +38,18 @@ export default function AuditLogsPage() {
   });
 
   useEffect(() => {
+    // authLoadingがfalseになるまで待つ
+    if (authLoading) {
+      return;
+    }
+
     if (user && ['ADMIN', 'COMPLIANCE'].includes(user.role)) {
       fetchLogs();
     } else if (user) {
       setError('このページへのアクセス権限がありません');
       setLoading(false);
     }
-  }, [user, page, filters]);
+  }, [user, authLoading, page, filters]);
 
   const fetchLogs = async () => {
     try {

@@ -1,5 +1,5 @@
 import express from 'express';
-import { requireRole } from '../middleware/auth';
+import { authenticate, requireRole } from '../middleware/auth';
 import {
   getAuditLogs,
   getAuditLog,
@@ -10,7 +10,8 @@ import {
 
 const router = express.Router();
 
-// All audit routes require ADMIN or COMPLIANCE role
+// All audit routes require authentication and ADMIN or COMPLIANCE role
+router.use(authenticate);
 router.use(requireRole(['ADMIN', 'COMPLIANCE']));
 
 // Get all audit logs with filtering

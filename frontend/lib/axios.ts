@@ -14,8 +14,13 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
+    console.log('[Axios Interceptor] Token from localStorage:', token ? 'EXISTS' : 'NULL');
+    console.log('[Axios Interceptor] Request URL:', config.url);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('[Axios Interceptor] Authorization header set');
+    } else {
+      console.warn('[Axios Interceptor] No token found in localStorage!');
     }
     return config;
   },
@@ -32,6 +37,9 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // 認証エラーの場合、トークンを削除してログインページへ
+      console.error('401 Unauthorized:', error.response?.data);
+      console.error('Request URL:', error.config?.url);
+      console.error('Token exists:', !!localStorage.getItem('token'));
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       if (typeof window !== 'undefined') {
