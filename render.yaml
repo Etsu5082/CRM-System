@@ -1,0 +1,191 @@
+services:
+  # Auth Service
+  - type: web
+    name: crm-auth-service
+    runtime: docker
+    dockerfilePath: ./services/auth-service/Dockerfile
+    dockerContext: ./services/auth-service
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3100
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: auth-db
+          property: connectionString
+
+  # Customer Service
+  - type: web
+    name: crm-customer-service
+    runtime: docker
+    dockerfilePath: ./services/customer-service/Dockerfile
+    dockerContext: ./services/customer-service
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3101
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: customer-db
+          property: connectionString
+      - key: AUTH_SERVICE_URL
+        fromService:
+          name: crm-auth-service
+          type: web
+          property: host
+      - key: KAFKA_BROKERS
+        value: # To be filled after Upstash setup
+
+  # Sales Activity Service
+  - type: web
+    name: crm-sales-activity-service
+    runtime: docker
+    dockerfilePath: ./services/sales-activity-service/Dockerfile
+    dockerContext: ./services/sales-activity-service
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3102
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sales-activity-db
+          property: connectionString
+      - key: AUTH_SERVICE_URL
+        fromService:
+          name: crm-auth-service
+          type: web
+          property: host
+      - key: KAFKA_BROKERS
+        value: # To be filled after Upstash setup
+
+  # Opportunity Service
+  - type: web
+    name: crm-opportunity-service
+    runtime: docker
+    dockerfilePath: ./services/opportunity-service/Dockerfile
+    dockerContext: ./services/opportunity-service
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3103
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: opportunity-db
+          property: connectionString
+      - key: AUTH_SERVICE_URL
+        fromService:
+          name: crm-auth-service
+          type: web
+          property: host
+      - key: KAFKA_BROKERS
+        value: # To be filled after Upstash setup
+
+  # Analytics Service
+  - type: web
+    name: crm-analytics-service
+    runtime: docker
+    dockerfilePath: ./services/analytics-service/Dockerfile
+    dockerContext: ./services/analytics-service
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3104
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: analytics-db
+          property: connectionString
+      - key: REDIS_URL
+        fromDatabase:
+          name: redis
+          property: connectionString
+      - key: KAFKA_BROKERS
+        value: # To be filled after Upstash setup
+
+  # API Gateway
+  - type: web
+    name: crm-api-gateway
+    runtime: docker
+    dockerfilePath: ./services/api-gateway/Dockerfile
+    dockerContext: ./services/api-gateway
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        sync: false
+      - key: AUTH_SERVICE_URL
+        fromService:
+          name: crm-auth-service
+          type: web
+          property: host
+      - key: CUSTOMER_SERVICE_URL
+        fromService:
+          name: crm-customer-service
+          type: web
+          property: host
+      - key: SALES_ACTIVITY_SERVICE_URL
+        fromService:
+          name: crm-sales-activity-service
+          type: web
+          property: host
+      - key: OPPORTUNITY_SERVICE_URL
+        fromService:
+          name: crm-opportunity-service
+          type: web
+          property: host
+      - key: ANALYTICS_SERVICE_URL
+        fromService:
+          name: crm-analytics-service
+          type: web
+          property: host
+
+databases:
+  - name: auth-db
+    databaseName: crm_auth
+    user: crm_auth_user
+    plan: free
+
+  - name: customer-db
+    databaseName: crm_customer
+    user: crm_customer_user
+    plan: free
+
+  - name: sales-activity-db
+    databaseName: crm_sales_activity
+    user: crm_sales_activity_user
+    plan: free
+
+  - name: opportunity-db
+    databaseName: crm_opportunity
+    user: crm_opportunity_user
+    plan: free
+
+  - name: analytics-db
+    databaseName: crm_analytics
+    user: crm_analytics_user
+    plan: free
+
+  - name: redis
+    plan: free
