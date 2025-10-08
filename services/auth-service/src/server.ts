@@ -52,7 +52,7 @@ const startServer = async () => {
       try {
         await initKafkaProducer();
         console.log('✓ Kafka producer initialized');
-      } catch (error) {
+      } catch (error: any) {
         console.warn('⚠️  Kafka connection failed, continuing without Kafka:', error.message);
       }
     } else {

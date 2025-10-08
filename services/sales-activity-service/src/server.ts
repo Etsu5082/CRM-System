@@ -30,7 +30,7 @@ app.get('/ready', async (req, res) => {
     const prisma = require('./config/database').default;
     await prisma.$queryRaw`SELECT 1`;
     res.json({ status: 'ready', service: 'sales-activity-service' });
-  } catch (error) {
+  } catch (error: any) {
     res.status(503).json({ status: 'not ready', error: 'Database not available' });
   }
 });
@@ -50,7 +50,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start server
 const startServer = async () => {
   try {
-    if (process.env.KAFKA_ENABLED !== 'false') { try { await initKafkaProducer(); console.log('✓ Kafka initialized'); } catch (error) { console.warn('⚠️  Kafka disabled:', error.message); } } else { console.log('ℹ️  Kafka disabled'); }
+    if (process.env.KAFKA_ENABLED !== 'false') { try { await initKafkaProducer(); console.log('✓ Kafka initialized'); } catch (error: any) { console.warn('⚠️  Kafka disabled:', error.message); } } else { console.log('ℹ️  Kafka disabled'); }
 
     // Start Kafka consumer
     const consumer = await initKafkaConsumer();
@@ -70,7 +70,7 @@ const startServer = async () => {
             default:
               console.log(`Unhandled event type: ${event.eventType}`);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Error handling event ${event.eventType}:`, error);
         }
       },
@@ -82,7 +82,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`🚀 Sales Activity Service running on port ${PORT}`);
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }

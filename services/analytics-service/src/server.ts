@@ -30,7 +30,7 @@ app.get('/ready', async (req, res) => {
     const prisma = require('./config/database').default;
     await prisma.$queryRaw`SELECT 1`;
     res.json({ status: 'ready', service: 'analytics-service' });
-  } catch (error) {
+  } catch (error: any) {
     res.status(503).json({ status: 'not ready', error: 'Database not available' });
   }
 });
@@ -85,7 +85,7 @@ const startServer = async () => {
             default:
               console.log(`Unhandled event type: ${event.eventType}`);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Error handling event ${event.eventType}:`, error);
         }
       },
@@ -94,7 +94,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`🚀 Analytics Service running on port ${PORT}`);
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
