@@ -47,7 +47,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start server
 const startServer = async () => {
   try {
-    await initKafkaProducer();
+    if (process.env.KAFKA_ENABLED !== 'false') { try { await initKafkaProducer(); console.log('✓ Kafka initialized'); } catch (error) { console.warn('⚠️  Kafka disabled:', error.message); } } else { console.log('ℹ️  Kafka disabled'); }
 
     // Start Kafka consumer
     const consumer = await initKafkaConsumer();

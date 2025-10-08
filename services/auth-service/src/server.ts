@@ -47,7 +47,17 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start server
 const startServer = async () => {
   try {
-    await initKafkaProducer();
+    // Initialize Kafka only if enabled
+    if (process.env.KAFKA_ENABLED !== 'false') {
+      try {
+        await initKafkaProducer();
+        console.log('✓ Kafka producer initialized');
+      } catch (error) {
+        console.warn('⚠️  Kafka connection failed, continuing without Kafka:', error.message);
+      }
+    } else {
+      console.log('ℹ️  Kafka disabled by configuration');
+    }
 
     app.listen(PORT, () => {
       console.log(`🚀 Auth Service running on port ${PORT}`);
