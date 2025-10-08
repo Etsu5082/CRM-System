@@ -1,0 +1,263 @@
+version: '3.9'
+
+services:
+  # Kafka & Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - crm-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - crm-network
+
+  # Databases
+  auth-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - crm-network
+
+  customer-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: customer_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - customer-db-data:/var/lib/postgresql/data
+    networks:
+      - crm-network
+
+  sales-activity-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sales_activity_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+    volumes:
+      - sales-activity-db-data:/var/lib/postgresql/data
+    networks:
+      - crm-network
+
+  opportunity-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: opportunity_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5435:5432"
+    volumes:
+      - opportunity-db-data:/var/lib/postgresql/data
+    networks:
+      - crm-network
+
+  analytics-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: analytics_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5436:5432"
+    volumes:
+      - analytics-db-data:/var/lib/postgresql/data
+    networks:
+      - crm-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - crm-network
+
+  # Microservices
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "3100:3100"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@auth-db:5432/auth_db
+      JWT_SECRET: dev-secret-change-in-production
+      JWT_EXPIRES_IN: 24h
+      PORT: 3100
+      NODE_ENV: development
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: auth-service
+    depends_on:
+      - auth-db
+      - kafka
+    networks:
+      - crm-network
+    restart: unless-stopped
+
+  customer-service:
+    build:
+      context: ./services/customer-service
+      dockerfile: Dockerfile
+    ports:
+      - "3101:3101"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@customer-db:5432/customer_db
+      JWT_SECRET: dev-secret-change-in-production
+      PORT: 3101
+      NODE_ENV: development
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: customer-service
+      AUTH_SERVICE_URL: http://auth-service:3100
+    depends_on:
+      - customer-db
+      - kafka
+      - auth-service
+    networks:
+      - crm-network
+    restart: unless-stopped
+
+  sales-activity-service:
+    build:
+      context: ./services/sales-activity-service
+      dockerfile: Dockerfile
+    ports:
+      - "3102:3102"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@sales-activity-db:5432/sales_activity_db
+      JWT_SECRET: dev-secret-change-in-production
+      PORT: 3102
+      NODE_ENV: development
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: sales-activity-service
+      AUTH_SERVICE_URL: http://auth-service:3100
+      CUSTOMER_SERVICE_URL: http://customer-service:3101
+    depends_on:
+      - sales-activity-db
+      - kafka
+      - auth-service
+      - customer-service
+    networks:
+      - crm-network
+    restart: unless-stopped
+
+  opportunity-service:
+    build:
+      context: ./services/opportunity-service
+      dockerfile: Dockerfile
+    ports:
+      - "3103:3103"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@opportunity-db:5432/opportunity_db
+      JWT_SECRET: dev-secret-change-in-production
+      PORT: 3103
+      NODE_ENV: development
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: opportunity-service
+      AUTH_SERVICE_URL: http://auth-service:3100
+      CUSTOMER_SERVICE_URL: http://customer-service:3101
+    depends_on:
+      - opportunity-db
+      - kafka
+      - auth-service
+      - customer-service
+    networks:
+      - crm-network
+    restart: unless-stopped
+
+  analytics-service:
+    build:
+      context: ./services/analytics-service
+      dockerfile: Dockerfile
+    ports:
+      - "3104:3104"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@analytics-db:5432/analytics_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret-change-in-production
+      PORT: 3104
+      NODE_ENV: development
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: analytics-service
+      AUTH_SERVICE_URL: http://auth-service:3100
+      CUSTOMER_SERVICE_URL: http://customer-service:3101
+      SALES_ACTIVITY_SERVICE_URL: http://sales-activity-service:3102
+      OPPORTUNITY_SERVICE_URL: http://opportunity-service:3103
+    depends_on:
+      - analytics-db
+      - redis
+      - kafka
+      - auth-service
+      - customer-service
+      - sales-activity-service
+      - opportunity-service
+    networks:
+      - crm-network
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      JWT_SECRET: dev-secret-change-in-production
+      AUTH_SERVICE_URL: http://auth-service:3100
+      CUSTOMER_SERVICE_URL: http://customer-service:3101
+      SALES_ACTIVITY_SERVICE_URL: http://sales-activity-service:3102
+      OPPORTUNITY_SERVICE_URL: http://opportunity-service:3103
+      ANALYTICS_SERVICE_URL: http://analytics-service:3104
+    depends_on:
+      - auth-service
+      - customer-service
+      - sales-activity-service
+      - opportunity-service
+      - analytics-service
+    networks:
+      - crm-network
+    restart: unless-stopped
+
+networks:
+  crm-network:
+    driver: bridge
+
+volumes:
+  auth-db-data:
+  customer-db-data:
+  sales-activity-db-data:
+  opportunity-db-data:
+  analytics-db-data:
+  redis-data:

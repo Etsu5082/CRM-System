@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Meeting {
+  id             String   @id @default(cuid())
+  customerId     String
+  salesId        String
+  date           DateTime
+  summary        String
+  nextAction     String?
+  nextActionDate DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([salesId])
+  @@index([date])
+  @@map("meetings")
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  userId      String
+  customerId  String?
+  title       String
+  description String?
+  dueDate     DateTime
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([dueDate])
+  @@index([status])
+  @@map("tasks")
+}

@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RECALLED
+}
+
+model ApprovalRequest {
+  id          String         @id @default(cuid())
+  requesterId String
+  approverId  String?
+  customerId  String
+  productName String
+  amount      Float
+  status      ApprovalStatus @default(PENDING)
+  comment     String?
+  requestedAt DateTime       @default(now())
+  processedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([requesterId])
+  @@index([approverId])
+  @@index([customerId])
+  @@index([status])
+  @@map("approval_requests")
+}

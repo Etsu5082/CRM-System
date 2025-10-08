@@ -1,0 +1,97 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8] [cursor=pointer]
+  - alert [ref=e11]
+  - generic [ref=e12]:
+    - banner [ref=e13]:
+      - generic [ref=e14]:
+        - link "証券CRM" [ref=e16] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e17] [cursor=pointer]: 証券CRM
+        - generic [ref=e18]:
+          - generic [ref=e19]:
+            - paragraph [ref=e20]: コンプライアンス三郎
+            - paragraph [ref=e21]: COMPLIANCE
+          - button "ログアウト" [ref=e22]
+    - navigation [ref=e23]:
+      - generic [ref=e25]:
+        - link "📊 ダッシュボード" [ref=e26] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e27] [cursor=pointer]: 📊
+          - generic [ref=e28] [cursor=pointer]: ダッシュボード
+        - link "👥 顧客管理" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/customers
+          - generic [ref=e30] [cursor=pointer]: 👥
+          - generic [ref=e31] [cursor=pointer]: 顧客管理
+        - link "💼 商談履歴" [ref=e32] [cursor=pointer]:
+          - /url: /dashboard/meetings
+          - generic [ref=e33] [cursor=pointer]: 💼
+          - generic [ref=e34] [cursor=pointer]: 商談履歴
+        - link "✓ タスク管理" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/tasks
+          - generic [ref=e36] [cursor=pointer]: ✓
+          - generic [ref=e37] [cursor=pointer]: タスク管理
+        - link "✔️ 承認ワークフロー" [ref=e38] [cursor=pointer]:
+          - /url: /dashboard/approvals
+          - generic [ref=e39] [cursor=pointer]: ✔️
+          - generic [ref=e40] [cursor=pointer]: 承認ワークフロー
+        - link "📈 レポート" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/reports
+          - generic [ref=e42] [cursor=pointer]: 📈
+          - generic [ref=e43] [cursor=pointer]: レポート
+        - link "🔍 監査ログ" [ref=e44] [cursor=pointer]:
+          - /url: /dashboard/audit
+          - generic [ref=e45] [cursor=pointer]: 🔍
+          - generic [ref=e46] [cursor=pointer]: 監査ログ
+    - main [ref=e47]:
+      - heading "ダッシュボード" [level=2] [ref=e48]
+      - generic [ref=e49]:
+        - generic [ref=e51]:
+          - generic [ref=e52]: "5"
+          - paragraph [ref=e53]: 顧客数
+        - generic [ref=e55]:
+          - generic [ref=e56]: "4"
+          - paragraph [ref=e57]: 商談数
+        - generic [ref=e59]:
+          - generic [ref=e60]: "5"
+          - paragraph [ref=e61]: タスク数
+        - generic [ref=e63]:
+          - generic [ref=e64]: "0"
+          - paragraph [ref=e65]: 期限切れタスク
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - heading "顧客管理" [level=3] [ref=e69]
+          - generic [ref=e70]:
+            - paragraph [ref=e71]: 顧客情報の登録・管理
+            - button "顧客一覧へ" [ref=e72]
+        - generic [ref=e73]:
+          - heading "商談履歴" [level=3] [ref=e75]
+          - generic [ref=e76]:
+            - paragraph [ref=e77]: 商談記録の管理
+            - button "商談一覧へ" [ref=e78]
+        - generic [ref=e79]:
+          - heading "タスク管理" [level=3] [ref=e81]
+          - generic [ref=e82]:
+            - paragraph [ref=e83]: タスク・リマインダー
+            - button "タスク一覧へ" [ref=e84]
+        - generic [ref=e85]:
+          - heading "承認ワークフロー" [level=3] [ref=e87]
+          - generic [ref=e88]:
+            - paragraph [ref=e89]: 商品提案の承認管理
+            - button "承認一覧へ" [ref=e90]
+        - generic [ref=e91]:
+          - heading "レポート" [level=3] [ref=e93]
+          - generic [ref=e94]:
+            - paragraph [ref=e95]: 営業実績レポート
+            - button "レポートへ" [ref=e96]
+        - generic [ref=e97]:
+          - heading "監査ログ" [level=3] [ref=e99]
+          - generic [ref=e100]:
+            - paragraph [ref=e101]: 操作履歴の閲覧
+            - button "ログ一覧へ" [ref=e102]
+    - contentinfo [ref=e103]:
+      - paragraph [ref=e105]: © 2025 証券CRMシステム. All rights reserved.
+```

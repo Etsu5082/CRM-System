@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crm-config
+  namespace: crm-system
+data:
+  KAFKA_BROKERS: "kafka-0.kafka-headless.crm-system.svc.cluster.local:9092"
+  NODE_ENV: "production"
+  JWT_EXPIRES_IN: "24h"
+  AUTH_SERVICE_URL: "http://auth-service:3100"
+  CUSTOMER_SERVICE_URL: "http://customer-service:3101"
+  SALES_ACTIVITY_SERVICE_URL: "http://sales-activity-service:3102"
+  OPPORTUNITY_SERVICE_URL: "http://opportunity-service:3103"
+  ANALYTICS_SERVICE_URL: "http://analytics-service:3104"
+  REDIS_URL: "redis://redis-master:6379"
