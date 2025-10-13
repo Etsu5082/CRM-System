@@ -50,46 +50,62 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start server
 const startServer = async () => {
   try {
-    await connectRedis();
+    // Initialize Redis if available
+    try {
+      await connectRedis();
+      console.log('✓ Redis connected');
+    } catch (error: any) {
+      console.warn('⚠️  Redis connection failed, continuing without Redis:', error.message);
+    }
 
-    // Start Kafka consumer
-    const consumer = await initKafkaConsumer();
-    consumer.run({
-      eachMessage: async ({ topic, partition, message }) => {
-        const event = JSON.parse(message.value?.toString() || '{}');
-        console.log(`📥 Received event: ${event.eventType}`);
+    // Initialize Kafka only if enabled
+    if (process.env.KAFKA_ENABLED !== 'false') {
+      try {
+        const consumer = await initKafkaConsumer();
+        console.log('✓ Kafka consumer initialized');
 
-        try {
-          switch (event.eventType) {
-            case 'approval.requested':
-              await eventHandler.handleApprovalRequested(event);
-              break;
-            case 'approval.approved':
-              await eventHandler.handleApprovalApproved(event);
-              break;
-            case 'approval.rejected':
-              await eventHandler.handleApprovalRejected(event);
-              break;
-            case 'task.due_soon':
-              await eventHandler.handleTaskDueSoon(event);
-              break;
-            case 'task.completed':
-              await eventHandler.handleTaskCompleted(event);
-              break;
-            case 'customer.created':
-              await eventHandler.handleCustomerCreated(event);
-              break;
-            case 'meeting.created':
-              await eventHandler.handleMeetingCreated(event);
-              break;
-            default:
-              console.log(`Unhandled event type: ${event.eventType}`);
-          }
-        } catch (error: any) {
-          console.error(`Error handling event ${event.eventType}:`, error);
-        }
-      },
-    });
+        consumer.run({
+          eachMessage: async ({ topic, partition, message }) => {
+            const event = JSON.parse(message.value?.toString() || '{}');
+            console.log(`📥 Received event: ${event.eventType}`);
+
+            try {
+              switch (event.eventType) {
+                case 'approval.requested':
+                  await eventHandler.handleApprovalRequested(event);
+                  break;
+                case 'approval.approved':
+                  await eventHandler.handleApprovalApproved(event);
+                  break;
+                case 'approval.rejected':
+                  await eventHandler.handleApprovalRejected(event);
+                  break;
+                case 'task.due_soon':
+                  await eventHandler.handleTaskDueSoon(event);
+                  break;
+                case 'task.completed':
+                  await eventHandler.handleTaskCompleted(event);
+                  break;
+                case 'customer.created':
+                  await eventHandler.handleCustomerCreated(event);
+                  break;
+                case 'meeting.created':
+                  await eventHandler.handleMeetingCreated(event);
+                  break;
+                default:
+                  console.log(`Unhandled event type: ${event.eventType}`);
+              }
+            } catch (error: any) {
+              console.error(`Error handling event ${event.eventType}:`, error);
+            }
+          },
+        });
+      } catch (error: any) {
+        console.warn('⚠️  Kafka connection failed, continuing without Kafka:', error.message);
+      }
+    } else {
+      console.log('ℹ️  Kafka disabled by configuration');
+    }
 
     app.listen(PORT, () => {
       console.log(`🚀 Analytics Service running on port ${PORT}`);
