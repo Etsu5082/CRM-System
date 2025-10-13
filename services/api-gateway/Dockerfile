@@ -5,8 +5,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY . .
-RUN npm run build
+# Copy source files explicitly to ensure fresh build
+COPY tsconfig.json ./
+COPY src ./src
+
+# Force clean build
+RUN rm -rf dist && npm run build
 
 FROM node:20-alpine
 
