@@ -25,7 +25,6 @@
     "uuid": "^11.1.0",
     "zod": "^4.1.11",
     "@sentry/node": "^7.118.0",
-    "@sentry/profiling-node": "^7.118.0",
     "pino": "^8.16.2",
     "pino-pretty": "^10.2.3"
   },

@@ -26,7 +26,6 @@
     "uuid": "^11.0.5",
     "redis": "^4.6.0",
     "@sentry/node": "^7.118.0",
-    "@sentry/profiling-node": "^7.118.0",
     "pino": "^8.16.2",
     "pino-pretty": "^10.2.3"
   },
