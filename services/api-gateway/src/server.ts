@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 import axios from 'axios';
 
 dotenv.config();
@@ -28,12 +27,12 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('combined'));
 
-// Rate limiting - validate trust proxy setting
+// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 100,
   message: 'Too many requests from this IP, please try again later.',
-  validate: { trustProxy: false }, // Disable validation since we trust only 1 proxy
+  validate: { trustProxy: false },
 });
 app.use('/api/', limiter);
 
@@ -46,16 +45,58 @@ const authenticate = async (req: express.Request, res: express.Response, next: e
   }
 
   try {
-    // Verify token with Auth Service
     const response = await axios.get(`${AUTH_SERVICE}/auth/me`, {
       headers: { Authorization: token },
+      timeout: 10000,
     });
-
-    // Attach user to request
     (req as any).user = response.data;
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// Generic proxy function
+const proxyRequest = async (
+  req: express.Request,
+  res: express.Response,
+  targetUrl: string,
+  pathPrefix: string
+) => {
+  try {
+    const path = req.path.replace(pathPrefix, '');
+    const url = `${targetUrl}${path}${req.url.includes('?') ? '?' + req.url.split('?')[1] : ''}`;
+
+    console.log(`[Proxy] ${req.method} ${req.path} -> ${url}`);
+
+    const response = await axios({
+      method: req.method,
+      url: url,
+      data: req.body,
+      headers: {
+        ...req.headers,
+        host: undefined, // Remove host header
+      },
+      timeout: 30000,
+      validateStatus: () => true, // Don't throw on any status
+    });
+
+    console.log(`[Proxy] ${req.method} ${req.path} <- ${response.status}`);
+
+    // Forward response
+    res.status(response.status);
+    Object.keys(response.headers).forEach(key => {
+      res.setHeader(key, response.headers[key]);
+    });
+    res.send(response.data);
+  } catch (error: any) {
+    console.error(`[Proxy Error] ${req.method} ${req.path}:`, error.message);
+    if (!res.headersSent) {
+      res.status(502).json({
+        error: 'Bad Gateway',
+        message: error.message,
+      });
+    }
   }
 };
 
@@ -64,19 +105,18 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     service: 'api-gateway',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 app.get('/ready', async (req, res) => {
   try {
-    // Check if all services are reachable
     await Promise.all([
-      axios.get(`${AUTH_SERVICE}/health`),
-      axios.get(`${CUSTOMER_SERVICE}/health`),
-      axios.get(`${SALES_ACTIVITY_SERVICE}/health`),
-      axios.get(`${OPPORTUNITY_SERVICE}/health`),
-      axios.get(`${ANALYTICS_SERVICE}/health`),
+      axios.get(`${AUTH_SERVICE}/health`, { timeout: 5000 }),
+      axios.get(`${CUSTOMER_SERVICE}/health`, { timeout: 5000 }),
+      axios.get(`${SALES_ACTIVITY_SERVICE}/health`, { timeout: 5000 }),
+      axios.get(`${OPPORTUNITY_SERVICE}/health`, { timeout: 5000 }),
+      axios.get(`${ANALYTICS_SERVICE}/health`, { timeout: 5000 }),
     ]);
     res.json({ status: 'ready', service: 'api-gateway' });
   } catch (error) {
@@ -84,143 +124,34 @@ app.get('/ready', async (req, res) => {
   }
 });
 
-// Proxy configurations
-const proxyOptions = {
-  changeOrigin: true,
-  logLevel: 'debug' as const,
-  timeout: 120000, // 120 seconds timeout
-  proxyTimeout: 120000, // 120 seconds proxy timeout
-  followRedirects: true,
-  onProxyReq: (proxyReq: any, req: express.Request, res: express.Response) => {
-    console.log(`[Proxy] ${req.method} ${req.url} -> ${proxyReq.path}`);
-  },
-  onProxyRes: (proxyRes: any, req: express.Request, res: express.Response) => {
-    console.log(`[Proxy] ${req.method} ${req.url} <- ${proxyRes.statusCode}`);
-  },
-  onError: (err: any, req: express.Request, res: express.Response) => {
-    console.error('Proxy error:', err);
-    if (!res.headersSent) {
-      res.status(502).json({ error: 'Bad Gateway - Service unavailable', details: err.message });
-    }
-  },
-};
+// Auth Service routes (public)
+app.post('/api/auth/register', (req, res) => proxyRequest(req, res, AUTH_SERVICE, '/api'));
+app.post('/api/auth/login', (req, res) => proxyRequest(req, res, AUTH_SERVICE, '/api'));
 
-// Auth Service (public routes)
-app.use(
-  '/api/auth/login',
-  createProxyMiddleware({
-    target: AUTH_SERVICE,
-    pathRewrite: { '^/api/auth': '/auth' },
-    ...proxyOptions,
-  })
-);
-
-app.use(
-  '/api/auth/register',
-  createProxyMiddleware({
-    target: AUTH_SERVICE,
-    pathRewrite: { '^/api/auth': '/auth' },
-    ...proxyOptions,
-  })
-);
-
-// Auth Service (protected routes)
-app.use(
-  '/api/auth',
-  authenticate,
-  createProxyMiddleware({
-    target: AUTH_SERVICE,
-    pathRewrite: { '^/api/auth': '/auth' },
-    ...proxyOptions,
-  })
-);
+// Auth Service routes (protected)
+app.use('/api/auth', authenticate, (req, res) => proxyRequest(req, res, AUTH_SERVICE, '/api'));
 
 // Customer Service
-app.use(
-  '/api/customers',
-  authenticate,
-  createProxyMiddleware({
-    target: CUSTOMER_SERVICE,
-    pathRewrite: { '^/api/customers': '/customers' },
-    ...proxyOptions,
-  })
-);
+app.use('/api/customers', authenticate, (req, res) => proxyRequest(req, res, CUSTOMER_SERVICE, '/api'));
 
 // Sales Activity Service
-app.use(
-  '/api/meetings',
-  authenticate,
-  createProxyMiddleware({
-    target: SALES_ACTIVITY_SERVICE,
-    pathRewrite: { '^/api/meetings': '/meetings' },
-    ...proxyOptions,
-  })
-);
-
-app.use(
-  '/api/tasks',
-  authenticate,
-  createProxyMiddleware({
-    target: SALES_ACTIVITY_SERVICE,
-    pathRewrite: { '^/api/tasks': '/tasks' },
-    ...proxyOptions,
-  })
-);
+app.use('/api/meetings', authenticate, (req, res) => proxyRequest(req, res, SALES_ACTIVITY_SERVICE, '/api'));
+app.use('/api/tasks', authenticate, (req, res) => proxyRequest(req, res, SALES_ACTIVITY_SERVICE, '/api'));
 
 // Opportunity Service
-app.use(
-  '/api/approvals',
-  authenticate,
-  createProxyMiddleware({
-    target: OPPORTUNITY_SERVICE,
-    pathRewrite: { '^/api/approvals': '/approvals' },
-    ...proxyOptions,
-  })
-);
+app.use('/api/approvals', authenticate, (req, res) => proxyRequest(req, res, OPPORTUNITY_SERVICE, '/api'));
 
 // Analytics Service
-app.use(
-  '/api/reports',
-  authenticate,
-  createProxyMiddleware({
-    target: ANALYTICS_SERVICE,
-    pathRewrite: { '^/api/reports': '/reports' },
-    ...proxyOptions,
-  })
-);
-
-app.use(
-  '/api/notifications',
-  authenticate,
-  createProxyMiddleware({
-    target: ANALYTICS_SERVICE,
-    pathRewrite: { '^/api/notifications': '/notifications' },
-    ...proxyOptions,
-  })
-);
-
-// Error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-  });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+app.use('/api/reports', authenticate, (req, res) => proxyRequest(req, res, ANALYTICS_SERVICE, '/api'));
+app.use('/api/notifications', authenticate, (req, res) => proxyRequest(req, res, ANALYTICS_SERVICE, '/api'));
 
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 API Gateway running on port ${PORT}`);
-  console.log(`📡 Proxying to:`);
+  console.log('📡 Proxying to:');
   console.log(`   - Auth Service: ${AUTH_SERVICE}`);
   console.log(`   - Customer Service: ${CUSTOMER_SERVICE}`);
   console.log(`   - Sales Activity Service: ${SALES_ACTIVITY_SERVICE}`);
   console.log(`   - Opportunity Service: ${OPPORTUNITY_SERVICE}`);
   console.log(`   - Analytics Service: ${ANALYTICS_SERVICE}`);
 });
-
-export default app;
