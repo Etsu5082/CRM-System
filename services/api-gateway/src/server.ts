@@ -57,6 +57,7 @@ const authenticate = async (req: express.Request, res: express.Response, next: e
 };
 
 // Generic proxy function
+// Fixed: Correctly removes /api prefix to forward requests to microservices
 const proxyRequest = async (
   req: express.Request,
   res: express.Response,
@@ -65,6 +66,7 @@ const proxyRequest = async (
 ) => {
   try {
     // Remove /api prefix to get the actual path
+    // Example: /api/customers -> /customers
     const path = req.path.replace('/api', '');
     const url = `${targetUrl}${path}${req.url.includes('?') ? '?' + req.url.split('?')[1] : ''}`;
 
