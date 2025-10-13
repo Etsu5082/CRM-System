@@ -64,7 +64,8 @@ const proxyRequest = async (
   pathPrefix: string
 ) => {
   try {
-    const path = req.path.replace(pathPrefix, '');
+    // Remove /api prefix to get the actual path
+    const path = req.path.replace('/api', '');
     const url = `${targetUrl}${path}${req.url.includes('?') ? '?' + req.url.split('?')[1] : ''}`;
 
     console.log(`[Proxy] ${req.method} ${req.path} -> ${url}`);
