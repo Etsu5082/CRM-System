@@ -12,8 +12,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust proxy headers from Render
-app.set('trust proxy', true);
+// Trust proxy - trust first proxy (Render's load balancer)
+app.set('trust proxy', 1);
 
 // Service URLs
 const AUTH_SERVICE = process.env.AUTH_SERVICE_URL || 'http://localhost:3100';
@@ -28,11 +28,12 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('combined'));
 
-// Rate limiting
+// Rate limiting - validate trust proxy setting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
+  validate: { trustProxy: false }, // Disable validation since we trust only 1 proxy
 });
 app.use('/api/', limiter);
 
