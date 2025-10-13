@@ -100,6 +100,15 @@ app.use(
   })
 );
 
+app.use(
+  '/api/auth/register',
+  createProxyMiddleware({
+    target: AUTH_SERVICE,
+    pathRewrite: { '^/api/auth': '/auth' },
+    ...proxyOptions,
+  })
+);
+
 // Auth Service (protected routes)
 app.use(
   '/api/auth',
