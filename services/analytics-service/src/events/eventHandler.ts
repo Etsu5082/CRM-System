@@ -1,5 +1,5 @@
 import prisma from '../config/database';
-import redis from '../config/redis';
+import { cacheDel, cacheDelPattern } from '../config/redis';
 
 export const handleApprovalRequested = async (event: any) => {
   const { approvalId, requesterId } = event.data;
@@ -16,7 +16,7 @@ export const handleApprovalRequested = async (event: any) => {
   });
 
   // Invalidate cache
-  await redis.del('report:approval-stats');
+  await cacheDel('report:approval-stats');
 };
 
 export const handleApprovalApproved = async (event: any) => {
@@ -33,7 +33,7 @@ export const handleApprovalApproved = async (event: any) => {
     },
   });
 
-  await redis.del('report:approval-stats');
+  await cacheDel('report:approval-stats');
 };
 
 export const handleApprovalRejected = async (event: any) => {
@@ -50,7 +50,7 @@ export const handleApprovalRejected = async (event: any) => {
     },
   });
 
-  await redis.del('report:approval-stats');
+  await cacheDel('report:approval-stats');
 };
 
 export const handleTaskDueSoon = async (event: any) => {
@@ -69,14 +69,14 @@ export const handleTaskDueSoon = async (event: any) => {
 };
 
 export const handleTaskCompleted = async (event: any) => {
-  await redis.del('report:task-completion');
+  await cacheDel('report:task-completion');
 };
 
 export const handleCustomerCreated = async (event: any) => {
-  await redis.del('report:customer-stats');
-  await redis.del('report:sales-summary');
+  await cacheDel('report:customer-stats');
+  await cacheDel('report:sales-summary');
 };
 
 export const handleMeetingCreated = async (event: any) => {
-  await redis.del('report:sales-summary');
+  await cacheDel('report:sales-summary');
 };

@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import notificationRoutes from './routes/notifications';
 import reportRoutes from './routes/reports';
 import { initKafkaConsumer, disconnectKafka } from './config/kafka';
-import { connectRedis, disconnectRedis } from './config/redis';
+import { initRedis, disconnectRedis } from './config/redis';
 import * as eventHandler from './events/eventHandler';
 
 dotenv.config();
@@ -52,7 +52,7 @@ const startServer = async () => {
   try {
     // Initialize Redis if available
     try {
-      await connectRedis();
+      await initRedis();
       console.log('✓ Redis connected');
     } catch (error: any) {
       console.warn('⚠️  Redis connection failed, continuing without Redis:', error.message);

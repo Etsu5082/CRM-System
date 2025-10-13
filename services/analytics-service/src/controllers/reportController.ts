@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import axios from 'axios';
-import redis from '../config/redis';
+import { cacheGet, cacheSet } from '../config/redis';
 import { AuthRequest } from '../types';
 
 const CACHE_TTL = 300; // 5 minutes
@@ -8,10 +8,10 @@ const CACHE_TTL = 300; // 5 minutes
 export const getSalesSummary = async (req: AuthRequest, res: Response) => {
   try {
     const cacheKey = 'report:sales-summary';
-    const cached = await redis.get(cacheKey);
+    const cached = await cacheGet<any>(cacheKey);
 
     if (cached) {
-      return res.json(JSON.parse(cached));
+      return res.json(cached);
     }
 
     // Fetch from multiple services
@@ -40,7 +40,7 @@ export const getSalesSummary = async (req: AuthRequest, res: Response) => {
       generatedAt: new Date().toISOString(),
     };
 
-    await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(report));
+    await cacheSet(cacheKey, report, CACHE_TTL);
 
     res.json(report);
   } catch (error) {
@@ -52,10 +52,10 @@ export const getSalesSummary = async (req: AuthRequest, res: Response) => {
 export const getCustomerStatistics = async (req: AuthRequest, res: Response) => {
   try {
     const cacheKey = 'report:customer-stats';
-    const cached = await redis.get(cacheKey);
+    const cached = await cacheGet<any>(cacheKey);
 
     if (cached) {
-      return res.json(JSON.parse(cached));
+      return res.json(cached);
     }
 
     const customersRes = await axios.get(`${process.env.CUSTOMER_SERVICE_URL}/customers`, {
@@ -76,7 +76,7 @@ export const getCustomerStatistics = async (req: AuthRequest, res: Response) => 
       generatedAt: new Date().toISOString(),
     };
 
-    await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(stats));
+    await cacheSet(cacheKey, stats, CACHE_TTL);
 
     res.json(stats);
   } catch (error) {
@@ -88,10 +88,10 @@ export const getCustomerStatistics = async (req: AuthRequest, res: Response) => 
 export const getApprovalStatistics = async (req: AuthRequest, res: Response) => {
   try {
     const cacheKey = 'report:approval-stats';
-    const cached = await redis.get(cacheKey);
+    const cached = await cacheGet<any>(cacheKey);
 
     if (cached) {
-      return res.json(JSON.parse(cached));
+      return res.json(cached);
     }
 
     const approvalsRes = await axios.get(`${process.env.OPPORTUNITY_SERVICE_URL}/approvals`, {
@@ -111,7 +111,7 @@ export const getApprovalStatistics = async (req: AuthRequest, res: Response) => 
       generatedAt: new Date().toISOString(),
     };
 
-    await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(stats));
+    await cacheSet(cacheKey, stats, CACHE_TTL);
 
     res.json(stats);
   } catch (error) {
@@ -123,10 +123,10 @@ export const getApprovalStatistics = async (req: AuthRequest, res: Response) => 
 export const getTaskCompletion = async (req: AuthRequest, res: Response) => {
   try {
     const cacheKey = 'report:task-completion';
-    const cached = await redis.get(cacheKey);
+    const cached = await cacheGet<any>(cacheKey);
 
     if (cached) {
-      return res.json(JSON.parse(cached));
+      return res.json(cached);
     }
 
     const tasksRes = await axios.get(`${process.env.SALES_ACTIVITY_SERVICE_URL}/tasks`, {
@@ -153,7 +153,7 @@ export const getTaskCompletion = async (req: AuthRequest, res: Response) => {
       generatedAt: new Date().toISOString(),
     };
 
-    await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(stats));
+    await cacheSet(cacheKey, stats, CACHE_TTL);
 
     res.json(stats);
   } catch (error) {
