@@ -5,6 +5,7 @@ import { authenticate, authorize } from '../middleware/auth';
 const router = express.Router();
 
 // Public routes
+router.post('/register', authController.createUser);
 router.post('/login', authController.login);
 
 // Protected routes
