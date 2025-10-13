@@ -167,16 +167,18 @@ export const createUser = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Create audit log
-    await prisma.auditLog.create({
-      data: {
-        userId: req.user!.id,
-        action: 'CREATE',
-        resourceType: 'User',
-        resourceId: user.id,
-        ipAddress: req.ip,
-      },
-    });
+    // Create audit log (only if user is authenticated - admin creating user)
+    if (req.user) {
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user.id,
+          action: 'CREATE',
+          resourceType: 'User',
+          resourceId: user.id,
+          ipAddress: req.ip,
+        },
+      });
+    }
 
     res.status(201).json(user);
   } catch (error) {
