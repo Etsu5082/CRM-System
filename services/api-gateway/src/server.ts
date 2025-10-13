@@ -12,6 +12,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy headers from Render
+app.set('trust proxy', true);
+
 // Service URLs
 const AUTH_SERVICE = process.env.AUTH_SERVICE_URL || 'http://localhost:3100';
 const CUSTOMER_SERVICE = process.env.CUSTOMER_SERVICE_URL || 'http://localhost:3101';
