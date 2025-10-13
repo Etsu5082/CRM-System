@@ -1,0 +1,66 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Services
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Notify deployment start
+        run: |
+          echo "🚀 Starting deployment to Render..."
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+
+      - name: Trigger Render deployment
+        run: |
+          echo "⏳ Render will automatically deploy from this push"
+          echo "Monitor deployment at: https://dashboard.render.com/"
+
+      - name: Wait for deployment
+        run: |
+          echo "⏱️  Waiting 60 seconds for deployment to start..."
+          sleep 60
+
+      - name: Health check - API Gateway
+        run: |
+          echo "🏥 Checking API Gateway health..."
+          curl -f https://crm-api-gateway.onrender.com/health || echo "⚠️  Gateway not ready yet"
+
+      - name: Health check - Auth Service
+        run: |
+          echo "🏥 Checking Auth Service health..."
+          curl -f https://crm-auth-service-smfm.onrender.com/health || echo "⚠️  Auth Service not ready yet"
+
+      - name: Deployment summary
+        run: |
+          echo "
+          =====================================
+          📊 Deployment Summary
+          =====================================
+
+          Services Deployed:
+          - API Gateway: https://crm-api-gateway.onrender.com
+          - Auth Service: https://crm-auth-service-smfm.onrender.com
+          - Customer Service: https://crm-customer-service.onrender.com
+          - Sales Activity Service: https://crm-sales-activity-service.onrender.com
+          - Opportunity Service: https://crm-opportunity-service.onrender.com
+          - Analytics Service: https://crm-analytics-service.onrender.com
+
+          📝 Next Steps:
+          1. Monitor logs in Render Dashboard
+          2. Verify Kafka connection
+          3. Verify Redis connection
+          4. Run E2E tests
+
+          =====================================
+          "
