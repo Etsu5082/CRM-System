@@ -23,6 +23,12 @@ export const initKafkaConsumer = async () => {
 };
 
 export const publishEvent = async (topic: string, event: any) => {
+  // Skip if Kafka is not initialized
+  if (!producer) {
+    console.log(`⏭️  Skipping event publish (Kafka disabled): ${event.eventType}`);
+    return;
+  }
+
   try {
     await producer.send({
       topic,
