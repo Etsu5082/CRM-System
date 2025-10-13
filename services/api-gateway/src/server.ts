@@ -87,12 +87,21 @@ app.get('/ready', async (req, res) => {
 // Proxy configurations
 const proxyOptions = {
   changeOrigin: true,
-  logLevel: 'warn' as const,
-  timeout: 60000, // 60 seconds timeout
-  proxyTimeout: 60000, // 60 seconds proxy timeout
+  logLevel: 'debug' as const,
+  timeout: 120000, // 120 seconds timeout
+  proxyTimeout: 120000, // 120 seconds proxy timeout
+  followRedirects: true,
+  onProxyReq: (proxyReq: any, req: express.Request, res: express.Response) => {
+    console.log(`[Proxy] ${req.method} ${req.url} -> ${proxyReq.path}`);
+  },
+  onProxyRes: (proxyRes: any, req: express.Request, res: express.Response) => {
+    console.log(`[Proxy] ${req.method} ${req.url} <- ${proxyRes.statusCode}`);
+  },
   onError: (err: any, req: express.Request, res: express.Response) => {
     console.error('Proxy error:', err);
-    res.status(502).json({ error: 'Bad Gateway - Service unavailable' });
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Bad Gateway - Service unavailable', details: err.message });
+    }
   },
 };
 
