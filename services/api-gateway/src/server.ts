@@ -65,10 +65,14 @@ const proxyRequest = async (
   pathPrefix: string
 ) => {
   try {
-    // Remove /api prefix to get the actual path
+    // Remove /api prefix using substring (more explicit than replace)
     // Example: /api/customers -> /customers
-    const path = req.path.replace('/api', '');
-    const url = `${targetUrl}${path}${req.url.includes('?') ? '?' + req.url.split('?')[1] : ''}`;
+    let path = req.path;
+    if (path.startsWith('/api')) {
+      path = path.substring(4); // Remove first 4 characters ("/api")
+    }
+    const queryString = req.url.includes('?') ? '?' + req.url.split('?')[1] : '';
+    const url = `${targetUrl}${path}${queryString}`;
 
     console.log(`[Proxy] ${req.method} ${req.path} -> ${url}`);
 
