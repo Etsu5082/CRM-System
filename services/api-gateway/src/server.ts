@@ -84,6 +84,8 @@ app.get('/ready', async (req, res) => {
 const proxyOptions = {
   changeOrigin: true,
   logLevel: 'warn' as const,
+  timeout: 60000, // 60 seconds timeout
+  proxyTimeout: 60000, // 60 seconds proxy timeout
   onError: (err: any, req: express.Request, res: express.Response) => {
     console.error('Proxy error:', err);
     res.status(502).json({ error: 'Bad Gateway - Service unavailable' });
