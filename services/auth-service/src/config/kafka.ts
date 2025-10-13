@@ -4,6 +4,12 @@ import { DomainEvent } from '../types';
 const kafka = new Kafka({
   clientId: process.env.KAFKA_CLIENT_ID || 'auth-service',
   brokers: (process.env.KAFKA_BROKERS || 'localhost:9092').split(','),
+  ssl: process.env.KAFKA_USERNAME ? true : undefined,
+  sasl: process.env.KAFKA_USERNAME ? {
+    mechanism: 'plain',
+    username: process.env.KAFKA_USERNAME,
+    password: process.env.KAFKA_PASSWORD || '',
+  } : undefined,
 });
 
 let producer: Producer;
