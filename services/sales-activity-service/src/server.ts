@@ -50,31 +50,43 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start server
 const startServer = async () => {
   try {
-    if (process.env.KAFKA_ENABLED !== 'false') { try { await initKafkaProducer(); console.log('✓ Kafka initialized'); } catch (error: any) { console.warn('⚠️  Kafka disabled:', error.message); } } else { console.log('ℹ️  Kafka disabled'); }
+    // Initialize Kafka only if enabled
+    if (process.env.KAFKA_ENABLED !== 'false') {
+      try {
+        await initKafkaProducer();
+        console.log('✓ Kafka producer initialized');
 
-    // Start Kafka consumer
-    const consumer = await initKafkaConsumer();
-    consumer.run({
-      eachMessage: async ({ topic, partition, message }) => {
-        const event = JSON.parse(message.value?.toString() || '{}');
-        console.log(`📥 Received event: ${event.eventType}`);
+        // Start Kafka consumer
+        const consumer = await initKafkaConsumer();
+        console.log('✓ Kafka consumer initialized');
 
-        try {
-          switch (event.eventType) {
-            case 'customer.deleted':
-              await handleCustomerDeleted(event);
-              break;
-            case 'user.deleted':
-              await handleUserDeleted(event);
-              break;
-            default:
-              console.log(`Unhandled event type: ${event.eventType}`);
-          }
-        } catch (error: any) {
-          console.error(`Error handling event ${event.eventType}:`, error);
-        }
-      },
-    });
+        consumer.run({
+          eachMessage: async ({ topic, partition, message }) => {
+            const event = JSON.parse(message.value?.toString() || '{}');
+            console.log(`📥 Received event: ${event.eventType}`);
+
+            try {
+              switch (event.eventType) {
+                case 'customer.deleted':
+                  await handleCustomerDeleted(event);
+                  break;
+                case 'user.deleted':
+                  await handleUserDeleted(event);
+                  break;
+                default:
+                  console.log(`Unhandled event type: ${event.eventType}`);
+              }
+            } catch (error: any) {
+              console.error(`Error handling event ${event.eventType}:`, error);
+            }
+          },
+        });
+      } catch (error: any) {
+        console.warn('⚠️  Kafka connection failed, continuing without Kafka:', error.message);
+      }
+    } else {
+      console.log('ℹ️  Kafka disabled by configuration');
+    }
 
     // Start cron jobs
     startDueDateChecker();
