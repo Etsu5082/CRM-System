@@ -65,16 +65,21 @@ const proxyRequest = async (
   pathPrefix: string
 ) => {
   try {
-    // Remove /api prefix using substring (more explicit than replace)
+    // Reconstruct the full path from baseUrl + path
+    // app.use() strips the matched prefix, so we need to reconstruct it
+    const fullPath = req.baseUrl + req.path;
+
+    // Remove /api prefix
     // Example: /api/customers -> /customers
-    let path = req.path;
+    let path = fullPath;
     if (path.startsWith('/api')) {
-      path = path.substring(4); // Remove first 4 characters ("/api")
+      path = path.substring(4);
     }
+
     const queryString = req.url.includes('?') ? '?' + req.url.split('?')[1] : '';
     const url = `${targetUrl}${path}${queryString}`;
 
-    console.log(`[Proxy] ${req.method} ${req.path} -> ${url}`);
+    console.log(`[Proxy] ${req.method} ${fullPath} -> ${url}`);
 
     const response = await axios({
       method: req.method,
