@@ -4,8 +4,8 @@ import { authenticate, authorize } from '../middleware/auth';
 
 const router = express.Router();
 
-// All routes require authentication
-router.use(authenticate);
+// Authentication is handled by API Gateway, no need for duplicate auth here
+// router.use(authenticate);
 
 // Create customer (ADMIN, MANAGER, SALES)
 router.post('/', authorize('ADMIN', 'MANAGER', 'SALES'), customerController.createCustomer);

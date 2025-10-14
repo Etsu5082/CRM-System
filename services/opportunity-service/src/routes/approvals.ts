@@ -4,7 +4,8 @@ import { authenticate } from '../middleware/auth';
 
 const router = express.Router();
 
-router.use(authenticate);
+// Authentication is handled by API Gateway, no need for duplicate auth here
+// router.use(authenticate);
 
 router.post('/', approvalController.createApproval);
 router.get('/', approvalController.getApprovals);
