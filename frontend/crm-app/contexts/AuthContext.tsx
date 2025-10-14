@@ -61,9 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 実際のAPIを試行
+    const apiUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'https://crm-api-gateway-bjnb.onrender.com/api';
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/auth/login`,
+        `${apiUrl}/auth/login`,
         {
           method: "POST",
           headers: {

@@ -44,7 +44,7 @@ export default function ActivitiesPage() {
 
   const fetchData = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'https://crm-api-gateway-bjnb.onrender.com/api';
       const [tasksRes, meetingsRes] = await Promise.all([
         fetch(`${apiUrl}/sales-activities/tasks`, {
           headers: { Authorization: `Bearer ${token}` },

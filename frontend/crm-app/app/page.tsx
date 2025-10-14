@@ -29,7 +29,7 @@ export default function HomePage() {
 
   const fetchStats = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'https://crm-api-gateway-bjnb.onrender.com/api';
       const [customersRes, tasksRes, opportunitiesRes, meetingsRes] =
         await Promise.all([
           fetch(`${apiUrl}/customers`, {

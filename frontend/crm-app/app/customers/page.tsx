@@ -34,7 +34,7 @@ export default function CustomersPage() {
 
   const fetchCustomers = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'https://crm-api-gateway-bjnb.onrender.com/api';
       const response = await fetch(`${apiUrl}/customers`, {
         headers: { Authorization: `Bearer ${token}` },
       });

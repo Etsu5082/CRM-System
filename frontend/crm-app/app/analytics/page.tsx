@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
 
   const fetchReport = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'https://crm-api-gateway-bjnb.onrender.com/api';
       const response = await fetch(`${apiUrl}/analytics/reports/sales-summary`, {
         headers: { Authorization: `Bearer ${token}` },
       });
