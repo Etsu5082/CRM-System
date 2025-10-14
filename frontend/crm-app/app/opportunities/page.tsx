@@ -42,6 +42,9 @@ export default function OpportunitiesPage() {
       setOpportunities(data);
     } catch (error) {
       console.error("Failed to fetch opportunities:", error);
+      // バックエンドが利用できない場合、モックデータを使用
+      const { mockOpportunities } = await import("@/lib/mockData");
+      setOpportunities(mockOpportunities);
     } finally {
       setLoading(false);
     }

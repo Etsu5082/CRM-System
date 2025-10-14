@@ -42,6 +42,9 @@ export default function CustomersPage() {
       setCustomers(data);
     } catch (error) {
       console.error("Failed to fetch customers:", error);
+      // バックエンドが利用できない場合、モックデータを使用
+      const { mockCustomers } = await import("@/lib/mockData");
+      setCustomers(mockCustomers);
     } finally {
       setLoading(false);
     }

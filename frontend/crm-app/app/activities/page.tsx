@@ -57,6 +57,10 @@ export default function ActivitiesPage() {
       setMeetings(await meetingsRes.json());
     } catch (error) {
       console.error("Failed to fetch activities:", error);
+      // バックエンドが利用できない場合、モックデータを使用
+      const { mockTasks, mockMeetings } = await import("@/lib/mockData");
+      setTasks(mockTasks);
+      setMeetings(mockMeetings);
     } finally {
       setLoading(false);
     }

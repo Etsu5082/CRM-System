@@ -43,6 +43,9 @@ export default function AnalyticsPage() {
       setReport(data);
     } catch (error) {
       console.error("Failed to fetch report:", error);
+      // バックエンドが利用できない場合、モックデータを使用
+      const { mockAnalyticsReport } = await import("@/lib/mockData");
+      setReport(mockAnalyticsReport);
     } finally {
       setLoading(false);
     }

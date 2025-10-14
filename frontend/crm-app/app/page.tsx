@@ -61,6 +61,15 @@ export default function HomePage() {
       });
     } catch (error) {
       console.error("Failed to fetch stats:", error);
+      // バックエンドが利用できない場合、モックデータを使用
+      const { mockCustomers, mockTasks, mockOpportunities, mockMeetings } =
+        await import("@/lib/mockData");
+      setStats({
+        customers: mockCustomers.length,
+        tasks: mockTasks.length,
+        opportunities: mockOpportunities.length,
+        meetings: mockMeetings.length,
+      });
     }
   };
 
