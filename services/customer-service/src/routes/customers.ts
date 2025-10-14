@@ -7,22 +7,12 @@ const router = express.Router();
 // Authentication is handled by API Gateway, no need for duplicate auth here
 // router.use(authenticate);
 
-// Create customer (ADMIN, MANAGER, SALES)
-router.post('/', authorize('ADMIN', 'MANAGER', 'SALES'), customerController.createCustomer);
-
-// Get all customers (all authenticated users)
+// Authorization is handled by API Gateway, no need for role checks here
+router.post('/', customerController.createCustomer);
 router.get('/', customerController.getCustomers);
-
-// Search customers (all authenticated users)
 router.get('/search', customerController.searchCustomers);
-
-// Get single customer (all authenticated users)
 router.get('/:id', customerController.getCustomer);
-
-// Update customer (ADMIN, MANAGER, SALES)
-router.put('/:id', authorize('ADMIN', 'MANAGER', 'SALES'), customerController.updateCustomer);
-
-// Delete customer (ADMIN, MANAGER only)
-router.delete('/:id', authorize('ADMIN', 'MANAGER'), customerController.deleteCustomer);
+router.put('/:id', customerController.updateCustomer);
+router.delete('/:id', customerController.deleteCustomer);
 
 export default router;

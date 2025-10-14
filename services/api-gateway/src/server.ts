@@ -81,12 +81,22 @@ const proxyRequest = async (
 
     console.log(`[Proxy] ${req.method} ${fullPath} -> ${url}`);
 
+    // Forward user info from authentication middleware as headers
+    const user = (req as any).user;
+    const additionalHeaders: any = {};
+    if (user) {
+      additionalHeaders['x-user-id'] = user.id;
+      additionalHeaders['x-user-email'] = user.email;
+      additionalHeaders['x-user-role'] = user.role;
+    }
+
     const response = await axios({
       method: req.method,
       url: url,
       data: req.body,
       headers: {
         ...req.headers,
+        ...additionalHeaders,
         host: undefined, // Remove host header
       },
       timeout: 30000,

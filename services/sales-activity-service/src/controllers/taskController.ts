@@ -25,10 +25,16 @@ export const createTask = async (req: AuthRequest, res: Response) => {
   try {
     const data = createTaskSchema.parse(req.body);
 
+    // Get userId from header (set by API Gateway) or from req.user (for backward compatibility)
+    const userId = req.headers['x-user-id'] as string || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     const task = await prisma.task.create({
       data: {
         ...data,
-        userId: req.user!.id,
+        userId: userId,
         dueDate: new Date(data.dueDate),
       },
     });

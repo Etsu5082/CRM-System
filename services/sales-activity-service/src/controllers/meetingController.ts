@@ -25,6 +25,12 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
   try {
     const data = createMeetingSchema.parse(req.body);
 
+    // Get userId from header (set by API Gateway) or from req.user (for backward compatibility)
+    const userId = req.headers['x-user-id'] as string || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     // Verify customer exists
     try {
       await axios.get(
@@ -38,7 +44,7 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
     const meeting = await prisma.meeting.create({
       data: {
         ...data,
-        salesId: req.user!.id,
+        salesId: userId,
         date: new Date(data.date),
         nextActionDate: data.nextActionDate ? new Date(data.nextActionDate) : null,
       },

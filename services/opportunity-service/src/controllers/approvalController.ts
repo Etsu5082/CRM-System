@@ -22,6 +22,12 @@ export const createApproval = async (req: AuthRequest, res: Response) => {
   try {
     const data = createApprovalSchema.parse(req.body);
 
+    // Get userId from header (set by API Gateway) or from req.user (for backward compatibility)
+    const userId = req.headers['x-user-id'] as string || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     // Verify customer exists
     try {
       await axios.get(
@@ -35,7 +41,7 @@ export const createApproval = async (req: AuthRequest, res: Response) => {
     const approval = await prisma.approvalRequest.create({
       data: {
         ...data,
-        requesterId: req.user!.id,
+        requesterId: userId,
       },
     });
 
@@ -146,12 +152,18 @@ export const processApproval = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Approval already processed' });
     }
 
+    // Get userId from header (set by API Gateway) or from req.user (for backward compatibility)
+    const userId = req.headers['x-user-id'] as string || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     const approval = await prisma.approvalRequest.update({
       where: { id: req.params.id },
       data: {
         status: data.status,
         comment: data.comment,
-        approverId: req.user!.id,
+        approverId: userId,
         processedAt: new Date(),
       },
     });
@@ -184,6 +196,12 @@ export const processApproval = async (req: AuthRequest, res: Response) => {
 
 export const recallApproval = async (req: AuthRequest, res: Response) => {
   try {
+    // Get userId from header (set by API Gateway) or from req.user (for backward compatibility)
+    const userId = req.headers['x-user-id'] as string || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     const existing = await prisma.approvalRequest.findUnique({
       where: { id: req.params.id },
     });
@@ -192,7 +210,7 @@ export const recallApproval = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Approval not found' });
     }
 
-    if (existing.requesterId !== req.user!.id) {
+    if (existing.requesterId !== userId) {
       return res.status(403).json({ error: 'Not authorized to recall this approval' });
     }
 
