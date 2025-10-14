@@ -22,7 +22,7 @@ model Customer {
   investmentProfile     InvestmentProfile
   riskTolerance         Int               @default(5)
   investmentExperience  String?
-  assignedSalesId       String
+  assignedSalesId       String?
   deletedAt             DateTime?
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
